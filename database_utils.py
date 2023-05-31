@@ -24,11 +24,10 @@ class DatabaseConnector:
         engine.connect()
         inspector = inspect(engine)
         table_names = inspector.get_table_names()
-        print(table_names)
         return table_names
     
-DC = DatabaseConnector()
-DC.list_db_tables()
+# DC = DatabaseConnector()
+# DC.list_db_tables()
 
 
 
