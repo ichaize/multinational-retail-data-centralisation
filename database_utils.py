@@ -1,5 +1,5 @@
 import yaml
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, inspect
 
 class DatabaseConnector:
 
@@ -19,7 +19,15 @@ class DatabaseConnector:
                                     user, password, host, port, database))
         return engine
     
+    def list_db_tables(self):
+        engine = self.init_db_engine()
+        engine.connect()
+        inspector = inspect(engine)
+        table_names = inspector.get_table_names()
+        print(table_names)
+    
 DC = DatabaseConnector()
-engine = DC.init_db_engine()
-engine.connect()
+DC.list_db_tables()
+
+
 
