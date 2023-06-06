@@ -10,8 +10,9 @@ class DataExtractor:
 
 DE = DataExtractor()
 DC = DatabaseConnector()
-tables = DC.list_db_tables()
-DE.read_rds_table(DC, tables[1])
+# tables = DC.list_db_tables()
+user_data = DE.read_rds_table(DC, "legacy_users")
+
 
  
 # def read_rds_table(self, connector):
