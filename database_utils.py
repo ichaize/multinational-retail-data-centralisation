@@ -1,4 +1,5 @@
 import yaml
+import pandas as pd
 from sqlalchemy import create_engine, text, inspect
 
 class DatabaseConnector:
@@ -26,8 +27,28 @@ class DatabaseConnector:
         table_names = inspector.get_table_names()
         return table_names
     
-# DC = DatabaseConnector()
-# DC.list_db_tables()
+    def upload_to_db(self, df, table):
+        DATABASE_TYPE = "postgresql"
+        DBAPI = "psycopg2"
+        HOST = "localhost"
+        USER = "postgres"
+        PASSWORD = "temple"
+        DATABASE = "sales_data"
+        PORT = 5432
+        engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}", echo=True)
+        engine.connect()
+        df.to_sql(table, engine)
 
+    
+connector = DatabaseConnector()
+# DC.list_db_tables()
+if __name__ == "__main__":
+    from data_cleaning import cleaned_user_data
+    connector.upload_to_db(cleaned_user_data, "dim_users")
+
+# Problem 1: circular import - is it really necessary to have the three classes in three 
+# separate files? They all depend on each other, so how to avoid circularity?
+# Problem 2: the database engine connects to the AIcore database "postgres" but I need
+# to upload to my "sales_data" db - do I need a new engine? Should this be within the same class?
 
 

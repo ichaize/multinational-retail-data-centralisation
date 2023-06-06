@@ -4,32 +4,7 @@ from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
 import pandas as pd
 from pyisemail import is_email
-DE = DataExtractor()
-DC = DatabaseConnector()
-user_data = DE.read_rds_table(DC, "legacy_users")
-print
-
-# 
-# 
-# print(user_data.at[752, "date_of_birth"])
-# user_data["date_of_birth"] = pd.to_datetime(user_data["date_of_birth"], format="mixed", dayfirst=True)
-# print(user_data.dtypes)
-
-# user_data["checked_emails"] = user_data["email_address"].apply(lambda x: is_email(x))
-# # # print(user_data["checked_emails"].value_counts())
-# invalid_emails = user_data[user_data["checked_emails"] == False]
-# print(invalid_emails.head(20))
-
-# print(user_data.dtypes)
-# user_data_converted = user_data.convert_dtypes()
-# print(user_data_converted.dtypes)
-# print(user_data["checked_emails"].value_counts())
-
-# print(user_data.dtypes)
-
-# print(user_data.loc[752])
-
-#remove newline symbols: string.translate({ord('\n'): None})
+# from data_extraction import user_data
 
 class DataCleaning:
     
@@ -98,7 +73,8 @@ class DataCleaning:
         return self.table
 
     def clean_addresses(self):
-        self.table["address"] = self.table["address"].apply(lambda x: x.replace("\n", ","))
+        self.table["address"] = self.table["address"].apply(lambda x: x.replace("\n", ", "))
+        self.table["address"] = self.table["address"].apply(lambda x: (x := " ".join([word[0].upper() + word[1:] for word in x.split()])))
         return self.table
 
     def reset_idx(self):
@@ -110,7 +86,11 @@ class DataCleaning:
     
 
 
+DE = DataExtractor()
+DC = DatabaseConnector()
+user_data = DE.read_rds_table(DC, "legacy_users")
 data_to_clean = DataCleaning(user_data)
+cleaned_user_data = data_to_clean.clean_user_data()
 # user_data = data_to_clean.convert_types()
 # user_data = data_to_clean.remove_null_values()
 # # print(user_data.loc[11761])
@@ -129,5 +109,4 @@ data_to_clean = DataCleaning(user_data)
 # user_data = data_to_clean.clean_dates()
 # user_data = data_to_clean.clean_addresses()
 # user_data = data_to_clean.reset_index()
-user_data = data_to_clean.clean_user_data()
 # print(user_data.shape[0])
