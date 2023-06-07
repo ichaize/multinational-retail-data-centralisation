@@ -46,3 +46,5 @@ if __name__ == "__main__":
     connector.upload_to_db(cleaned_user_data, "dim_users")
 
 
+    from data_cleaning import cleaned_card_data
+    connector.upload_to_db(cleaned_card_data, "dim_user_details")
