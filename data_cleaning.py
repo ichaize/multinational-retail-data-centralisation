@@ -1,10 +1,16 @@
 
 #%%
-from data_extraction import DataExtractor
+from data_extraction import DataExtractor, card_data, user_data
 from database_utils import DatabaseConnector
 import pandas as pd
 from pyisemail import is_email
-# from data_extraction import user_data
+# DE = DataExtractor()
+# DC = DatabaseConnector()
+# user_data = DE.read_rds_table(DC, "legacy_users")
+
+# print(card_data["card_provider"].value_counts())
+
+
 
 class DataCleaning:
     
@@ -21,6 +27,29 @@ class DataCleaning:
         self.table = self.clean_phone_numbers()
         self.table = self.clean_addresses()
         self.table = self.reset_idx()
+        return self.table
+    
+    def clean_card_data(self):
+        self.table = self.convert_card_types()
+        self.table = self.remove_nonsense_and_nulls()
+        self.table = self.clean_card_numbers()
+        return self.table
+
+    def convert_card_types(self):
+        self.table["expiry_date"] = self.table["expiry_date"].astype("string")
+        self.table["card_number"] = self.table["card_number"].astype("string")
+        return self.table
+
+    def remove_nonsense_and_nulls(self):
+        self.table["nonsense"] = self.table["expiry_date"].apply(lambda x: len(x) != 5) # gets rid of NULL and nonsense (10 char string) values
+        self.table = self.table[~self.table["nonsense"]]
+        self.table.drop(["nonsense"], axis=1, inplace=True)
+        return self.table
+    
+    def clean_card_numbers(self):
+        self.table["card_number"] = self.table["card_number"].apply(lambda x: x.replace("?", ""))
+        self.table["card_number"] = self.table["card_number"].apply(lambda x: (x := f"0{x}") if len(x) < 12 else x) # all 11 digit numbers are maestro and missing a 0 on the front to make them valid
+        self.table = self.table[self.table["card_number"] != "0604691111"] # drop the only remaining number under 12 digits which must be a typo
         return self.table
 
     def convert_types(self):
@@ -86,27 +115,21 @@ class DataCleaning:
     
 
 
-DE = DataExtractor()
-DC = DatabaseConnector()
-user_data = DE.read_rds_table(DC, "legacy_users")
-data_to_clean = DataCleaning(user_data)
-cleaned_user_data = data_to_clean.clean_user_data()
-# user_data = data_to_clean.convert_types()
-# user_data = data_to_clean.remove_null_values()
-# # print(user_data.loc[11761])
-# user_data = data_to_clean.clean_emails()
-# # print(user_data.loc[205])
-# user_data = data_to_clean.remove_nonsense_values()
-# # print(user_data.loc[752])
-# user_data = data_to_clean.clean_dates()
-# # print(user_data["join_date"].head())
+
+# user_data_to_clean = DataCleaning(user_data)
+# cleaned_user_data = user_data_to_clean.clean_user_data()
+card_data_to_clean = DataCleaning(card_data)
+cleaned_card_data = card_data_to_clean.clean_card_data()
+print(cleaned_card_data.shape[0])
+
 # # print(user_data["country"].value_counts())
-# user_data = data_to_clean.clean_country_codes()
-# # print(user_data["country_code"].value_counts()) 
 # # pd.set_option('display.max_columns', None)
-# user_data = data_to_clean.clean_phone_numbers()
-# # print(user_data.head(20))
-# user_data = data_to_clean.clean_dates()
-# user_data = data_to_clean.clean_addresses()
-# user_data = data_to_clean.reset_index()
 # print(user_data.shape[0])
+
+# finding errors in card number (some start with series of ???, some are too short): 
+
+# self.table["incorrect_card_length"] = self.table["card_number"].apply(lambda x: len(x) < 12 or len(x) > 19)
+# incorrect_cards = self.table[self.table["incorrect_card_length"] == True]
+# self.table["wrong_card_length"] = self.table["card_number"].apply(lambda x: len(x) < 12 or len(x) > 19)
+# wrong_cards = self.table[self.table["wrong_card_length"] == True]
+# incorrect_cards["card_number"] = incorrect_cards["card_number"].apply(lambda x: (x := f"0{x}"))

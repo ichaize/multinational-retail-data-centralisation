@@ -41,14 +41,8 @@ class DatabaseConnector:
 
     
 connector = DatabaseConnector()
-# DC.list_db_tables()
 if __name__ == "__main__":
     from data_cleaning import cleaned_user_data
     connector.upload_to_db(cleaned_user_data, "dim_users")
-
-# Problem 1: circular import - is it really necessary to have the three classes in three 
-# separate files? They all depend on each other, so how to avoid circularity?
-# Problem 2: the database engine connects to the AIcore database "postgres" but I need
-# to upload to my "sales_data" db - do I need a new engine? Should this be within the same class?
 
 
