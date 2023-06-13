@@ -1,8 +1,11 @@
 
 #%%
-from data_extraction import store_data, card_data, user_data
+from data_extraction import product_data
+# from data_extraction import store_data, card_data, user_data
 import pandas as pd
 from pyisemail import is_email
+
+print(product_data["weight"].head(100))
 
 class DataCleaning:     
     
@@ -118,6 +121,9 @@ class DataCleaning:
     def clean_country_codes(self, table):
         table["country_code"].replace("GGB", "GB", inplace=True)
         return table
+    
+    def convert_product_weights(self, table):
+        pass
 
     def reset_idx(self, table):
         if "index" in table.columns:
@@ -126,7 +132,7 @@ class DataCleaning:
         return table
     
 
-data_cleaner = DataCleaning()
-cleaned_user_data = data_cleaner.clean_user_data(user_data)
-cleaned_card_data = data_cleaner.clean_card_data(card_data)
-cleaned_store_data = data_cleaner.clean_store_data(store_data)
+# data_cleaner = DataCleaning()
+# cleaned_user_data = data_cleaner.clean_user_data(user_data)
+# cleaned_card_data = data_cleaner.clean_card_data(card_data)
+# cleaned_store_data = data_cleaner.clean_store_data(store_data)
