@@ -21,7 +21,7 @@ class DataCleaning:
         self.table = self.convert_types()
         self.table = self.remove_null_values()
         self.table = self.clean_emails()
-        self.table = self.remove_nonsense_user_values()
+        self.table = self.remove_nonsense_values()
         self.table = self.clean_dates()
         self.table = self.clean_country_codes()
         self.table = self.clean_phone_numbers()
@@ -30,46 +30,70 @@ class DataCleaning:
         return self.table
     
     def clean_card_data(self):
-        self.table = self.convert_card_types()
+        self.table = self.convert_types()
         self.table = self.remove_nonsense_and_nulls()
         self.table = self.clean_card_numbers()
-        self.table["date_payment_confirmed"] = pd.to_datetime(self.table["date_payment_confirmed"], format="mixed").dt.date
+        self.table = self.clean_dates()
         self.table = self.reset_idx()
         return self.table
     
     def clean_store_data(self):
         self.table.drop(["lat"], axis=1, inplace=True)
+        self.table = self.convert_types()
         self.table = self.remove_null_values()
-        self.table = self.remove_store_nonsense()
+        self.table = self.remove_nonsense_values()
         self.table.replace({"continent": {"eeEurope": "Europe", "eeAmerica": "America"}}, inplace=True)
         self.table = self.clean_addresses()
+        self.table = self.clean_dates()
         self.table = self.clean_staff_numbers()
-        self.table["opening_date"] = pd.to_datetime(self.table["opening_date"], format="mixed").dt.date
         self.table = self.reset_idx()
         return self.table
     
-    def remove_store_nonsense(self):
-        self.table["country_code"] = self.table["country_code"].astype("string")
-        self.table["nonsense"] = self.table["country_code"].apply(lambda x: len(x) != 2)
+    def remove_null_values(self):
+        self.table = self.table[self.table["address"] != "NULL"]
+        return self.table
+    
+    def remove_nonsense_values(self):
+        if self.table == user_data:
+            self.table["nonsense"] = self.table["email_address"].apply(lambda x: "@" not in x)
+        elif self.table == store_data:
+            self.table["nonsense"] = self.table["country_code"].apply(lambda x: len(x) != 2)
         self.table = self.table[~self.table["nonsense"]]
         self.table.drop(["nonsense"], axis=1, inplace=True)
         return self.table
     
-    def clean_staff_numbers(self):
-        self.table["staff_numbers"] = self.table["staff_numbers"].astype("string")
-        self.table["staff_numbers"] = self.table["staff_numbers"].str.replace(r"\D+", "", regex=True)
-        return self.table
-
-    def convert_card_types(self):
-        self.table["expiry_date"] = self.table["expiry_date"].astype("string")
-        self.table["card_number"] = self.table["card_number"].astype("string")
-        return self.table
-
     def remove_nonsense_and_nulls(self):
         self.table["expiry_date"] = self.table["expiry_date"].astype("string")
         self.table["nonsense"] = self.table["expiry_date"].apply(lambda x: len(x) != 5) # gets rid of NULL and nonsense (10 char string) values
         self.table = self.table[~self.table["nonsense"]]
         self.table.drop(["nonsense"], axis=1, inplace=True)
+        return self.table
+
+    def convert_types(self):
+        if self.table == user_data:
+            self.table["email_address"] = self.table["email_address"].astype("string")
+            self.table["address"] = self.table["address"].astype("string")
+            self.table["phone_number"] = self.table["phone_number"].astype("string")
+        elif self.table == card_data:
+            self.table["expiry_date"] = self.table["expiry_date"].astype("string")
+            self.table["card_number"] = self.table["card_number"].astype("string")
+        elif self.table == store_data:
+            self.table["country_code"] = self.table["country_code"].astype("string")
+        return self.table
+    
+    def clean_dates(self):
+        if self.table == user_data:
+            self.table["date_of_birth"] = pd.to_datetime(self.table["date_of_birth"], format="mixed").dt.date
+            self.table["join_date"] = pd.to_datetime(self.table["join_date"], format="mixed").dt.date
+        elif self.table == card_data:
+            self.table["date_payment_confirmed"] = pd.to_datetime(self.table["date_payment_confirmed"], format="mixed").dt.date
+        elif self.table == store_data:
+            self.table["opening_date"] = pd.to_datetime(self.table["opening_date"], format="mixed").dt.date
+        return self.table
+    
+    def clean_addresses(self):
+        self.table["address"] = self.table["address"].apply(lambda x: x.replace("\n", ", "))
+        self.table["address"] = self.table["address"].apply(lambda x: (x := " ".join([word[0].upper() + word[1:] for word in x.split()])))
         return self.table
     
     def clean_card_numbers(self):
@@ -77,15 +101,10 @@ class DataCleaning:
         self.table["card_number"] = self.table["card_number"].apply(lambda x: (x := f"0{x}") if len(x) < 12 else x) # all 11 digit numbers are maestro and missing a 0 on the front to make them valid
         self.table = self.table[self.table["card_number"] != "0604691111"] # drop the only remaining number under 12 digits which must be a typo (all credit card numbers are between 12 and 19)
         return self.table
-
-    def convert_types(self):
-        self.table["email_address"] = self.table["email_address"].astype("string")
-        self.table["address"] = self.table["address"].astype("string")
-        self.table["phone_number"] = self.table["phone_number"].astype("string")
-        return self.table
-
-    def remove_null_values(self):
-        self.table = self.table[self.table["address"] != "NULL"]
+    
+    def clean_staff_numbers(self):
+        self.table["staff_numbers"] = self.table["staff_numbers"].astype("string")
+        self.table["staff_numbers"] = self.table["staff_numbers"].str.replace(r"\D+", "", regex=True)
         return self.table
     
     def clean_emails(self):
@@ -94,17 +113,6 @@ class DataCleaning:
         invalid_emails["email_address"] = invalid_emails["email_address"].apply(lambda x: x.replace("@@", "@"))
         self.table.update(invalid_emails)
         self.table.drop(["checked_emails"], axis=1, inplace=True)
-        return self.table
-    
-    def remove_nonsense_user_values(self):
-        self.table["nonsense"] = self.table["email_address"].apply(lambda x: "@" not in x)
-        self.table = self.table[~self.table["nonsense"]]
-        self.table.drop(["nonsense"], axis=1, inplace=True)
-        return self.table
-    
-    def clean_dates(self):
-        self.table["date_of_birth"] = pd.to_datetime(self.table["date_of_birth"], format="mixed").dt.date
-        self.table["join_date"] = pd.to_datetime(self.table["join_date"], format="mixed").dt.date
         return self.table
 
     def clean_country_codes(self):
@@ -127,39 +135,7 @@ class DataCleaning:
         self.table.update(americans)
         return self.table
 
-    def clean_addresses(self):
-        self.table["address"] = self.table["address"].apply(lambda x: x.replace("\n", ", "))
-        self.table["address"] = self.table["address"].apply(lambda x: (x := " ".join([word[0].upper() + word[1:] for word in x.split()])))
-        return self.table
-
     def reset_idx(self):
         self.table.drop(["index"], axis=1, inplace=True)
         self.table.reset_index()
         return self.table
-        
-        
-    
-
-
-
-# user_data_to_clean = DataCleaning(user_data)
-# cleaned_user_data = user_data_to_clean.clean_user_data()
-# card_data_to_clean = DataCleaning(card_data)
-# cleaned_card_data = card_data_to_clean.clean_card_data()
-store_data_to_clean = DataCleaning(store_data)
-cleaned_store_data = store_data_to_clean.clean_store_data()
-print(cleaned_store_data.head(35))
-
-
-#
-# # print(user_data["country"].value_counts())
-# # pd.set_option('display.max_columns', None)
-# print(user_data.shape[0])
-
-# finding errors in card number (some start with series of ???, some are too short): 
-
-# self.table["incorrect_card_length"] = self.table["card_number"].apply(lambda x: len(x) < 12 or len(x) > 19)
-# incorrect_cards = self.table[self.table["incorrect_card_length"] == True]
-# self.table["wrong_card_length"] = self.table["card_number"].apply(lambda x: len(x) < 12 or len(x) > 19)
-# wrong_cards = self.table[self.table["wrong_card_length"] == True]
-# incorrect_cards["card_number"] = incorrect_cards["card_number"].apply(lambda x: (x := f"0{x}"))
