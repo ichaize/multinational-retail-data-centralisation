@@ -42,9 +42,12 @@ class DatabaseConnector:
     
 connector = DatabaseConnector()
 if __name__ == "__main__":
-    from data_cleaning import cleaned_user_data
-    connector.upload_to_db(cleaned_user_data, "dim_users")
+    # from data_cleaning import cleaned_user_data
+    # connector.upload_to_db(cleaned_user_data, "dim_users")
 
 
-    from data_cleaning import cleaned_card_data
-    connector.upload_to_db(cleaned_card_data, "dim_user_details")
+    # from data_cleaning import cleaned_card_data
+    # connector.upload_to_db(cleaned_card_data, "dim_user_details")
+
+    from data_cleaning import cleaned_store_data
+    connector.upload_to_db(cleaned_store_data, "dim_store_details")
