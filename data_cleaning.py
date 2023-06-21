@@ -1,19 +1,27 @@
 
 #%%
-from data_extraction import product_data
-# from data_extraction import store_data, card_data, user_data
+from data_extraction import date_data
+# from data_extraction import store_data, card_data, user_data, product_data, order_data
 import pandas as pd
 from pyisemail import is_email
+import numpy as np
+# 
+# product_data["date_added"] = pd.to_datetime(product_data["date_added"], format="mixed").dt.date
+#print(product_data["date_added"].head(50)
 
-print(product_data["weight"].head(100))
+# 788, 794, 1660
+
+
+# print(product_data["weight"].head(50))
+# there are four null rows - find and remove them, then reset index and upload to db
 
 class DataCleaning:     
     
     def clean_user_data(self, table):
         table = self.convert_types(table)
+        table = self.remove_nonsense_values(table)
         table = self.remove_null_values(table)
         table = self.clean_emails(table)
-        table = self.remove_nonsense_user_values(table)
         table = self.clean_dates(table)
         table = self.clean_country_codes(table)
         table = self.clean_phone_numbers(table)
@@ -23,7 +31,8 @@ class DataCleaning:
     
     def clean_card_data(self, table):
         table = self.convert_types(table)
-        table = self.remove_nonsense_and_nulls(table)
+        table = self.remove_null_values(table)
+        table = self.remove_nonsense_values(table)
         table = self.clean_card_numbers(table)
         table = self.clean_dates(table)
        #  table = self.reset_idx(table)
@@ -32,7 +41,7 @@ class DataCleaning:
     def clean_store_data(self, table):
         table = self.convert_types(table)
         table = self.remove_null_values(table)
-        table = self.remove_nonsense_store_values(table)
+        table = self.remove_nonsense_values(table)
         table = self.clean_addresses(table)
         table = self.clean_dates(table)
         table = self.clean_staff_numbers(table)
@@ -41,38 +50,47 @@ class DataCleaning:
         # table = self.reset_idx(table)
         return table
     
+    def clean_product_data(self, table):
+        table.dropna(inplace=True)
+        table = self.convert_types(table)
+        table = self.remove_nonsense_values(table)
+        table = self.convert_product_weights(table)
+        table = self.reset_idx(table)
+        return table
+    
+    def clean_order_data(self, table):
+        table.drop(labels=["first_name", "last_name", "1"], axis=1, inplace=True)
+        table = self.reset_idx(table)
+        return table
+    
+    def clean_date_data(self, table):
+        table = self.convert_types(table)
+        table = self.remove_null_values(table)
+        table = self.remove_nonsense_values(table)
+        return table
+
     def convert_types(self, table):
-        to_convert = ["email_address", "address", "phone_number", "expiry_date", "card_number", "country_code"]
+        to_convert = ["email_address", "address", "phone_number", "expiry_date", "card_number", "country_code", "weight", "removed", "year"]
         for col in to_convert:
             if col in table.columns:
                 table[col] = table[col].astype("string")
         return table
     
     def remove_null_values(self, table):
-        table = table[table["address"] != "NULL"]
+        table = table[~table.isin(["NULL"]).any(axis=1)]
         return table
     
-    def remove_nonsense_user_values(self, table):
-        table["nonsense"] = table["email_address"].apply(lambda x: "@" not in x)
-        table = table[~table["nonsense"]]
-        table.drop(["nonsense"], axis=1, inplace=True)
-        return table
-    
-    def remove_nonsense_store_values(self, table):
-        table["nonsense"] = table["country_code"].apply(lambda x: len(x) != 2)
-        table = table[~table["nonsense"]]
-        table.drop(["nonsense"], axis=1, inplace=True)
-        return table
-    
-    def remove_nonsense_and_nulls(self, table):
-        table["expiry_date"] = table["expiry_date"].astype("string")
-        table["nonsense"] = table["expiry_date"].apply(lambda x: len(x) != 5) # gets rid of NULL and nonsense (10 char string) values
+    def remove_nonsense_values(self, table):
+        to_check = ["country_code", "removed", "expiry_date", "year"]
+        for col in to_check:
+            if col in table.columns:
+                table["nonsense"] = table[col].apply(lambda x: len(x) == 10)
         table = table[~table["nonsense"]]
         table.drop(["nonsense"], axis=1, inplace=True)
         return table
     
     def clean_dates(self, table):
-        date_columns = ["date_of_birth", "join_date", "date_payment_confirmed", "opening_date"]
+        date_columns = ["date_of_birth", "join_date", "date_payment_confirmed", "opening_date", "date_uuid"]
         for col in date_columns:
             if col in table.columns:
                 table[col] = pd.to_datetime(table[col], format="mixed").dt.date
@@ -123,16 +141,67 @@ class DataCleaning:
         return table
     
     def convert_product_weights(self, table):
-        pass
-
+        table["weight"] = table["weight"].apply(lambda x: x.replace("ml", "g"))
+        grams = table[~table["weight"].str.contains("k")] 
+        grams["weight"] = grams["weight"].apply(lambda x: x.replace("g", "").replace(".", ""))
+        x = grams[grams["weight"].str.contains("x")]
+        x["weight"] = x["weight"].apply(lambda x: x.replace("x", ""))
+        x["weight"] = x["weight"].apply(self.weight_cleaner)
+        grams.update(x)
+        grams["weight"] = grams["weight"].astype("string")
+        ounces = grams[grams["weight"].str.contains("oz", na=False)]
+        ounces["weight"] = ounces["weight"].apply(lambda x: x.replace("oz", ""))
+        ounces["weight"] = ounces["weight"].astype("float")
+        ounces["weight"] = ounces["weight"].apply(lambda x: x/35.274)
+        grams["weight"] = grams["weight"].apply(lambda x: x.replace("oz", ""))
+        grams["weight"] = grams["weight"].astype("float")
+        grams["weight"] = grams["weight"].apply(lambda x: x/1000)
+        grams.update(ounces)
+        table.update(grams)
+        table["weight"] = table["weight"].astype("string")
+        table["weight"] = table["weight"].apply(lambda x: x.replace("kg", ""))
+        table["weight"] = table["weight"].astype("float")
+        table["weight"] = table["weight"].apply(lambda x: (x := "{0:g}".format(x))) 
+        return table
+    
+    def weight_cleaner(self, x):
+        first_num = int(x.split()[0])
+        second_num = int(x.split()[1])
+        x = first_num * second_num
+        return x
+        
     def reset_idx(self, table):
         if "index" in table.columns:
             table.drop(["index"], axis=1, inplace=True)
+        if "Unnamed: 0" in table.columns:
+            table.drop(["Unnamed: 0"], axis=1, inplace=True)
         table.reset_index(drop=True, inplace=True)
         return table
     
 
-# data_cleaner = DataCleaning()
+data_cleaner = DataCleaning()
+cleaned_date_data = data_cleaner.clean_date_data(date_data)
+
 # cleaned_user_data = data_cleaner.clean_user_data(user_data)
 # cleaned_card_data = data_cleaner.clean_card_data(card_data)
 # cleaned_store_data = data_cleaner.clean_store_data(store_data)
+# cleaned_product_data = data_cleaner.clean_product_data(product_data)
+# cleaned_order_data = data_cleaner.clean_order_data(order_data)
+
+ # def remove_nonsense_user_values(self, table):
+    #     table["nonsense"] = table["email_address"].apply(lambda x: "@" not in x)
+    #     table = table[~table["nonsense"]]
+    #     table.drop(["nonsense"], axis=1, inplace=True)
+    #     return table
+    
+    # def remove_nonsense_store_values(self, table):
+    #     table["nonsense"] = table["country_code"].apply(lambda x: len(x) != 2)
+    #     table = table[~table["nonsense"]]
+    #     table.drop(["nonsense"], axis=1, inplace=True)
+    #     return table
+
+        # def remove_nonsense_and_nulls(self, table):
+    #     table["nonsense"] = table["expiry_date"].apply(lambda x: len(x) != 5) # gets rid of NULL and nonsense (10 char string) values
+    #     table = table[~table["nonsense"]]
+    #     table.drop(["nonsense"], axis=1, inplace=True)
+    #     return table

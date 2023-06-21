@@ -49,5 +49,14 @@ if __name__ == "__main__":
     # from data_cleaning import cleaned_card_data
     # connector.upload_to_db(cleaned_card_data, "dim_user_details")
 
-    from data_cleaning import cleaned_store_data
-    connector.upload_to_db(cleaned_store_data, "dim_store_details")
+    # from data_cleaning import cleaned_store_data
+    # connector.upload_to_db(cleaned_store_data, "dim_store_details")
+
+    # from data_cleaning import cleaned_product_data
+    # connector.upload_to_db(cleaned_product_data, "dim_products")
+
+    # from data_cleaning import cleaned_order_data
+    # connector.upload_to_db(cleaned_order_data, "orders_table")
+    
+    from data_cleaning import cleaned_date_data
+    connector.upload_to_db(cleaned_date_data, "dim_date_times")
