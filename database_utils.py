@@ -37,7 +37,7 @@ class DatabaseConnector:
         PORT = 5432
         engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}", echo=True)
         engine.connect()
-        df.to_sql(table, engine)
+        df.to_sql(table, engine, if_exists="replace")
 
     
 connector = DatabaseConnector()
@@ -55,8 +55,8 @@ if __name__ == "__main__":
     # from data_cleaning import cleaned_product_data
     # connector.upload_to_db(cleaned_product_data, "dim_products")
 
-    # from data_cleaning import cleaned_order_data
-    # connector.upload_to_db(cleaned_order_data, "orders_table")
+    from data_cleaning import cleaned_order_data
+    connector.upload_to_db(cleaned_order_data, "orders_table")
     
-    from data_cleaning import cleaned_date_data
-    connector.upload_to_db(cleaned_date_data, "dim_date_times")
+    # from data_cleaning import cleaned_date_data
+    # connector.upload_to_db(cleaned_date_data, "dim_date_times")

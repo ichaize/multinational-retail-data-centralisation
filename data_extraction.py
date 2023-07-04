@@ -57,14 +57,14 @@ class DataExtractor:
 
 DE = DataExtractor()
 DC = DatabaseConnector()
-# user_data = DE.read_rds_table(DC, "legacy_users")
+user_data = DE.read_rds_table(DC, "legacy_users")
 
 # pdf_link = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
 # card_data = DE.retrieve_pdf_data(pdf_link)
 
-# header_dict = {"x-api-key":"yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX"}
+header_dict = {"x-api-key":"yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX"}
 # number_of_stores = DE.list_number_of_stores("https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores", header_dict)
-# store_data = DE.retrieve_stores_data(f"https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details", header_dict)
+store_data = DE.retrieve_stores_data(f"https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details", header_dict)
 # product_data = DE.extract_from_s3("s3://data-handling-public/products.csv")
-# order_data = DE.read_rds_table(DC, "orders_table")
+order_data = DE.read_rds_table(DC, "orders_table")
 date_data = DE.extract_from_s3("https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json")

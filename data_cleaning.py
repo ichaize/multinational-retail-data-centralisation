@@ -1,19 +1,12 @@
 
 #%%
-from data_extraction import date_data
+from data_extraction import store_data
 # from data_extraction import store_data, card_data, user_data, product_data, order_data
 import pandas as pd
 from pyisemail import is_email
 import numpy as np
-# 
-# product_data["date_added"] = pd.to_datetime(product_data["date_added"], format="mixed").dt.date
-#print(product_data["date_added"].head(50)
 
-# 788, 794, 1660
-
-
-# print(product_data["weight"].head(50))
-# there are four null rows - find and remove them, then reset index and upload to db
+print(store_data["store_type"].head())
 
 class DataCleaning:     
     
@@ -59,7 +52,9 @@ class DataCleaning:
         return table
     
     def clean_order_data(self, table):
+        table = self.convert_types(table)
         table.drop(labels=["first_name", "last_name", "1"], axis=1, inplace=True)
+        table = self.clean_card_numbers(table)
         table = self.reset_idx(table)
         return table
     
@@ -180,28 +175,11 @@ class DataCleaning:
     
 
 data_cleaner = DataCleaning()
-cleaned_date_data = data_cleaner.clean_date_data(date_data)
-
+# cleaned_date_data = data_cleaner.clean_date_data(date_data)
 # cleaned_user_data = data_cleaner.clean_user_data(user_data)
 # cleaned_card_data = data_cleaner.clean_card_data(card_data)
 # cleaned_store_data = data_cleaner.clean_store_data(store_data)
-# cleaned_product_data = data_cleaner.clean_product_data(product_data)
+# cleaned_product_data = data_cleaner.clean_product_data(product_data) 
 # cleaned_order_data = data_cleaner.clean_order_data(order_data)
 
- # def remove_nonsense_user_values(self, table):
-    #     table["nonsense"] = table["email_address"].apply(lambda x: "@" not in x)
-    #     table = table[~table["nonsense"]]
-    #     table.drop(["nonsense"], axis=1, inplace=True)
-    #     return table
-    
-    # def remove_nonsense_store_values(self, table):
-    #     table["nonsense"] = table["country_code"].apply(lambda x: len(x) != 2)
-    #     table = table[~table["nonsense"]]
-    #     table.drop(["nonsense"], axis=1, inplace=True)
-    #     return table
 
-        # def remove_nonsense_and_nulls(self, table):
-    #     table["nonsense"] = table["expiry_date"].apply(lambda x: len(x) != 5) # gets rid of NULL and nonsense (10 char string) values
-    #     table = table[~table["nonsense"]]
-    #     table.drop(["nonsense"], axis=1, inplace=True)
-    #     return table
