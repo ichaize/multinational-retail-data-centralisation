@@ -9,6 +9,11 @@ class DatabaseConnector:
             db_creds = yaml.safe_load(stream)
         return db_creds
     
+    def read_local_db_creds(self):
+        with open("read_local_db_creds") as stream:
+            local_creds = yaml.safe_load(stream)
+        return local_creds
+    
     def init_db_engine(self):
         creds = self.read_db_creds()
         user = creds["RDS_USER"]
@@ -28,13 +33,14 @@ class DatabaseConnector:
         return table_names
     
     def upload_to_db(self, df, table):
-        DATABASE_TYPE = "postgresql"
-        DBAPI = "psycopg2"
-        HOST = "localhost"
-        USER = "postgres"
-        PASSWORD = "temple"
-        DATABASE = "sales_data"
-        PORT = 5432
+        creds = self.read_local_db_creds()
+        DATABASE_TYPE = creds["DATABASE_TYPE"]
+        DBAPI = creds["DBAPI"]
+        HOST = creds["HOST"]
+        USER = creds["USER"]
+        PASSWORD = creds["PASSWORD"]
+        DATABASE = creds["DATABASE"]
+        PORT = creds["PORT"]
         engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}", echo=True)
         engine.connect()
         df.to_sql(table, engine, if_exists="replace")
