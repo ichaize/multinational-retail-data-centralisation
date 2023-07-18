@@ -5,14 +5,10 @@ from sqlalchemy import create_engine, text, inspect
 class DatabaseConnector:
 
     def read_db_creds(self):
+        ''' gets the credentials for accessing the RDS database'''
         with open("db_creds.yaml") as stream:
             db_creds = yaml.safe_load(stream)
         return db_creds
-    
-    def read_local_db_creds(self):
-        with open("read_local_db_creds") as stream:
-            local_creds = yaml.safe_load(stream)
-        return local_creds
     
     def init_db_engine(self):
         creds = self.read_db_creds()
@@ -33,15 +29,15 @@ class DatabaseConnector:
         return table_names
     
     def upload_to_db(self, df, table):
-        creds = self.read_local_db_creds()
-        DATABASE_TYPE = creds["DATABASE_TYPE"]
-        DBAPI = creds["DBAPI"]
-        HOST = creds["HOST"]
-        USER = creds["USER"]
-        PASSWORD = creds["PASSWORD"]
-        DATABASE = creds["DATABASE"]
-        PORT = creds["PORT"]
-        engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}", echo=True)
+        creds = self.read_db_creds()
+        database_type = creds["LOCAL_DATABASE_TYPE"]
+        dbapi = creds["LOCAL_DBAPI"]
+        host = creds["LOCAL_HOST"]
+        user = creds["LOCAL_USER"]
+        password = creds["LOCAL_PASSWORD"]
+        database = creds["LOCAL_DATABASE"]
+        port = creds["LOCAL_PORT"]
+        engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
         engine.connect()
         df.to_sql(table, engine, if_exists="replace")
 
