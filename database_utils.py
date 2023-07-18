@@ -1,16 +1,16 @@
 import yaml
-import pandas as pd
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, inspect
 
 class DatabaseConnector:
 
     def read_db_creds(self):
-        ''' gets the credentials for accessing the RDS database'''
+        ''' gets the credentials for accessing the RDS database from a yaml file'''
         with open("db_creds.yaml") as stream:
             db_creds = yaml.safe_load(stream)
         return db_creds
     
     def init_db_engine(self):
+        '''accesses the RDS database using the credentials from read_db_creds'''
         creds = self.read_db_creds()
         user = creds["RDS_USER"]
         password = creds["RDS_PASSWORD"]
@@ -22,6 +22,7 @@ class DatabaseConnector:
         return engine
     
     def list_db_tables(self):
+        ''' lists the tables contained in the RDS database'''
         engine = self.init_db_engine()
         engine.connect()
         inspector = inspect(engine)
@@ -29,6 +30,7 @@ class DatabaseConnector:
         return table_names
     
     def upload_to_db(self, df, table):
+        '''uploads the cleaned data to the local SQL database'''
         creds = self.read_db_creds()
         database_type = creds["LOCAL_DATABASE_TYPE"]
         dbapi = creds["LOCAL_DBAPI"]
@@ -57,8 +59,8 @@ if __name__ == "__main__":
     # from data_cleaning import cleaned_product_data
     # connector.upload_to_db(cleaned_product_data, "dim_products")
 
-    from data_cleaning import cleaned_order_data
-    connector.upload_to_db(cleaned_order_data, "orders_table")
+    # from data_cleaning import cleaned_order_data
+    # connector.upload_to_db(cleaned_order_data, "orders_table")
     
     # from data_cleaning import cleaned_date_data
     # connector.upload_to_db(cleaned_date_data, "dim_date_times")
