@@ -1,5 +1,4 @@
 boto3==1.26.152
-numpy==1.24.3
 pandas==2.0.1
 pyisemail==2.0.1
 PyYAML==6.0

@@ -42,25 +42,3 @@ class DatabaseConnector:
         engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
         engine.connect()
         df.to_sql(table, engine, if_exists="replace")
-
-    
-connector = DatabaseConnector()
-if __name__ == "__main__":
-    # from data_cleaning import cleaned_user_data
-    # connector.upload_to_db(cleaned_user_data, "dim_users")
-
-
-    # from data_cleaning import cleaned_card_data
-    # connector.upload_to_db(cleaned_card_data, "dim_user_details")
-
-    # from data_cleaning import cleaned_store_data
-    # connector.upload_to_db(cleaned_store_data, "dim_store_details")
-
-    # from data_cleaning import cleaned_product_data
-    # connector.upload_to_db(cleaned_product_data, "dim_products")
-
-    # from data_cleaning import cleaned_order_data
-    # connector.upload_to_db(cleaned_order_data, "orders_table")
-    
-    # from data_cleaning import cleaned_date_data
-    # connector.upload_to_db(cleaned_date_data, "dim_date_times")
