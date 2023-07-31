@@ -4,17 +4,19 @@ from data_extraction import DataExtractor
 
 extractor = DataExtractor()
 cleaner = DataCleaning()
-connector = DatabaseConnector()
+rds_connector = DatabaseConnector("rds_db_creds.yaml")
 
 header_dict = {"x-api-key":"yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX"}
 pdf_link = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
 
-user_data = extractor.read_rds_table(connector, "legacy_users")
+user_data = extractor.read_rds_table(rds_connector, "legacy_users")
 card_data = extractor.retrieve_pdf_data(pdf_link)
 store_data = extractor.retrieve_stores_data(f"https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details", header_dict)
 product_data = extractor.extract_from_s3("s3://data-handling-public/products.csv")
 order_data = extractor.read_rds_table(connector, "orders_table")
 date_data = extractor.extract_from_s3("https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json")
+
+print(user_data.head())
 
 # number_of_stores = extractor.list_number_of_stores("https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores", header_dict)
 

@@ -3,22 +3,28 @@ from sqlalchemy import create_engine, inspect
 
 class DatabaseConnector:
 
-    def read_db_creds(self):
-        ''' gets the credentials for accessing the RDS database from a yaml file'''
-        with open("db_creds.yaml") as stream:
+    def __init__(self, credentials):
+        self.credentials = self.read_db_creds(credentials)
+
+    def read_db_creds(self, file):
+        ''' gets the credentials for accessing the database from a yaml file'''
+        with open(file) as stream:
             db_creds = yaml.safe_load(stream)
         return db_creds
     
     def init_db_engine(self):
-        '''accesses the RDS database using the credentials from read_db_creds'''
-        creds = self.read_db_creds()
-        user = creds["RDS_USER"]
-        password = creds["RDS_PASSWORD"]
-        host = creds["RDS_HOST"]
-        port = creds["RDS_PORT"]
-        database = creds["RDS_DATABASE"]
-        engine = create_engine(url="postgresql://{0}:{1}@{2}:{3}/{4}".format(
-                                    user, password, host, port, database))
+        '''iniiates an engine to connect to the RDS or local database'''
+        database_type = self.credentials["DB_DATABASE_TYPE"]
+        user = self.credentials["DB_USER"]
+        password = self.credentials["DB_PASSWORD"]
+        host = self.credentials["DB_HOST"]
+        port = self.credentials["DB_PORT"]
+        database = self.credentials["DB_DATABASE"]
+        dbapi = self.credentials["DB_DBAPI"]
+        if dbapi != None:
+            engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
+        else: 
+            engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
         return engine
     
     def list_db_tables(self):
@@ -31,14 +37,9 @@ class DatabaseConnector:
     
     def upload_to_db(self, df, table):
         '''uploads the cleaned data to the local SQL database'''
-        creds = self.read_db_creds()
-        database_type = creds["LOCAL_DATABASE_TYPE"]
-        dbapi = creds["LOCAL_DBAPI"]
-        host = creds["LOCAL_HOST"]
-        user = creds["LOCAL_USER"]
-        password = creds["LOCAL_PASSWORD"]
-        database = creds["LOCAL_DATABASE"]
-        port = creds["LOCAL_PORT"]
-        engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
-        engine.connect()
+        engine = self.init_db_engine()
         df.to_sql(table, engine, if_exists="replace")
+    
+
+rds_db = DatabaseConnector("local_db_creds.yaml")
+print(rds_db.credentials)
