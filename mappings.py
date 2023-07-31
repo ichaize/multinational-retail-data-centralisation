@@ -1,6 +1,7 @@
 WEIGHT_REPLACEMENTS = {
     "oz": "",
     "ml": "g",
+    "g": "",
     ".": "",
     "x": "",
     "kg": ""

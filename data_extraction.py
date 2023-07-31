@@ -6,9 +6,13 @@ import boto3
 
 class DataExtractor:
 
-    def read_db_creds(self):
-        ''' gets the credentials for accessing the RDS database from a yaml file'''
-        with open("db_creds.yaml") as stream:
+    def __init__(self, credentials):
+        '''credentials should be entered as the name of the yaml file containing the access creds'''
+        self.credentials = self.read_db_creds(credentials)
+
+    def read_db_creds(self, file):
+        ''' gets the credentials for accessing the database from a yaml file'''
+        with open(file) as stream:
             db_creds = yaml.safe_load(stream)
         return db_creds
 
@@ -42,10 +46,9 @@ class DataExtractor:
     
     def extract_from_s3(self, address):
         '''retrieves data stored in an S3 bucket and returns a dataframe'''
-        creds = self.read_db_creds()
-        aws_access_key_id = creds["AWS_ACCESS_KEY_ID"]
-        aws_secret_access_key = creds["AWS_SECRET_ACCESS_KEY"]
-        region = creds["REGION_NAME"]
+        aws_access_key_id = self.credentials["AWS_ACCESS_KEY_ID"]
+        aws_secret_access_key = self.credentials["AWS_SECRET_ACCESS_KEY"]
+        region = self.credentials["REGION_NAME"]
         bucket, key = address.split("/",2)[-1].split("/",1) # splits the address into data-handling-public and products.csv
         S3 = boto3.client("s3", region_name=region, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
         if address.endswith("csv"): # used for extracting the product data   

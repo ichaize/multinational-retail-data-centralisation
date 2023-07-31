@@ -3,7 +3,8 @@ from sqlalchemy import create_engine, inspect
 
 class DatabaseConnector:
 
-    def __init__(self, credentials):
+    def __init__(self, credentials): 
+        '''credentials should be entered as the name of the yaml file containing the access creds'''
         self.credentials = self.read_db_creds(credentials)
 
     def read_db_creds(self, file):
@@ -21,10 +22,10 @@ class DatabaseConnector:
         port = self.credentials["DB_PORT"]
         database = self.credentials["DB_DATABASE"]
         dbapi = self.credentials["DB_DBAPI"]
-        if dbapi != None:
+        if dbapi != "None": # the url for the rds database does not include a dbapi
             engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
         else: 
-            engine = create_engine(f"{database_type}+{dbapi}://{user}:{password}@{host}:{port}/{database}", echo=True)
+            engine = create_engine(f"{database_type}://{user}:{password}@{host}:{port}/{database}", echo=True)
         return engine
     
     def list_db_tables(self):
@@ -41,5 +42,4 @@ class DatabaseConnector:
         df.to_sql(table, engine, if_exists="replace")
     
 
-rds_db = DatabaseConnector("local_db_creds.yaml")
-print(rds_db.credentials)
+
