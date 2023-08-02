@@ -1,7 +1,6 @@
 boto3==1.26.152
 pandas==2.0.1
 pyisemail==2.0.1
-PyYAML==6.0
 PyYAML==6.0.1
 Requests==2.31.0
 SQLAlchemy==2.0.11

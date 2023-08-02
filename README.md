@@ -12,7 +12,7 @@ Technologies used: Python, pandas, PostgreSQL, PGAdmin, AWS (s3), boto3, sqlalch
 
 3. A DataCleaning class stored in data_cleaning.py. This applies the data cleaning and processing to the data.
 
-4. A Transformer class stored in transforms.py. This contains the data cleaning and processing methods used by the DataCleaning class. It imports mapping dictionaries from mappings.py.
+4. A Transformer class stored in transforms.py. This contains the data cleaning and processing methods used by the DataCleaning class. It imports mapping dictionaries from mappings.py. It includes methods to remove null values and garbled values, as well as ensuring phone numbers and card numbers are in the correct format, converting all product weights to kilograms for consistency, and tidying up dates and address. 
 
 5. The connections, data extraction and cleaning, and uploading to the local database are all performed in main.py.
 
