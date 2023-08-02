@@ -4,17 +4,32 @@ from sqlalchemy import create_engine, inspect
 class DatabaseConnector:
 
     def __init__(self, credentials): 
-        '''credentials should be entered as the name of the yaml file containing the access creds'''
+        '''The DatabaseConnector establishes connections to the RDS and local databases
+        
+           Args:
+                credentials (str): the yaml dictionary containing the access credentials
+        '''
         self.credentials = self.read_db_creds(credentials)
 
     def read_db_creds(self, file):
-        ''' gets the credentials for accessing the database from a yaml file'''
+        ''' Gets the credentials for accessing the database from a yaml file
+        
+            Args: 
+                file (str): the yaml file containing the access credentials
+                
+            Returns:
+                yaml dictionary
+        '''
         with open(file) as stream:
             db_creds = yaml.safe_load(stream)
         return db_creds
     
     def init_db_engine(self):
-        '''iniiates an engine to connect to the RDS or local database'''
+        '''Iniiates an engine to connect to the RDS or local database
+        
+           Returns:
+                sqlalchemy.engine
+        '''
         database_type = self.credentials["DB_DATABASE_TYPE"]
         user = self.credentials["DB_USER"]
         password = self.credentials["DB_PASSWORD"]
@@ -29,7 +44,11 @@ class DatabaseConnector:
         return engine
     
     def list_db_tables(self):
-        ''' lists the tables contained in the RDS database'''
+        '''Lists the tables contained in the RDS database
+        
+           Returns: 
+                list
+        '''
         engine = self.init_db_engine()
         engine.connect()
         inspector = inspect(engine)
@@ -37,7 +56,12 @@ class DatabaseConnector:
         return table_names
     
     def upload_to_db(self, df, table):
-        '''uploads the cleaned data to the local SQL database'''
+        '''Uploads the cleaned data to the local SQL database
+        
+           Args:
+                df (pandas.Dataframe): the dataframe to be uploaded
+                table (str): the name of the table to create in the SQL database
+        '''
         engine = self.init_db_engine()
         df.to_sql(table, engine, if_exists="replace")
     

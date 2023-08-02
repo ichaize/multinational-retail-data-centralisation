@@ -17,7 +17,7 @@ pdf_link = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details
 # order_data = rds_extractor.read_rds_table(rds_connector, "orders_table")
 # date_data = rds_extractor.extract_from_s3("https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json")
 
-# number_of_stores = extractor.list_number_of_stores("https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores", header_dict)
+# number_of_stores = rds_extractor.list_number_of_stores("https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores", header_dict)
 
 # cleaned_user_data = cleaner.clean_user_data(user_data)
 # cleaned_card_data = cleaner.clean_card_data(card_data)
