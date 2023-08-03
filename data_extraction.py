@@ -32,7 +32,7 @@ class DataExtractor:
         ''' Extracts data from an RDS database
         
             Args:
-                connector (instance): an instance of the DatabaseConnector class
+                connector (DatabaseConnector): an instance of the DatabaseConnector class
                 table_name (str): the name of the RDS table to be extracted
                 
             Returns:
